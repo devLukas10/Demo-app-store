@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Statics App</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="../../asset/icons/bootstrap/bootstrap-icons.min.css">
+</head>
+<body>
+    <section class="app-content">
+        <header class="app-header">
+            <h1>App Statistics</h1>
+        </header>
+        <div class="app-list-stat">
+            <div onclick="ShowContent('users')">
+                <i class="bi-person" ></i>
+                <h1 id="user-statistics"></h1>
+            </div>
+            <div onclick="ShowContent('payments')" >
+                <span id="paym-alert">0</span>
+                <i class="bi-envelope"></i>
+                <h1 id="payment-statistics"></h1>                
+            </div>
+            <div onclick="ShowContent('contentPayed')" >
+                <i class="bi-envelope"></i>
+                <h1 id="payment-statistics2">0</h1>                
+            </div>
+        </div>
+        <div class="box-content" id="contentUsers"></div>
+        <div class="box-content" id="contentPay"></div>
+        <div class="box-content" id="contentPayed"></div>
+    </section>
+
+
+    <script>
+        var userId = document.getElementById('user-statistics')
+        var payAll = document.getElementById('payment-statistics')
+        var payAll2 = document.getElementById('payment-statistics2')
+        ///app_pay2ads_adim_get_all_users
+        //app_pay2ads_admin_delete_payments
+        //app_pay2ads_adim_get_all_user_payed
+        const baseURL = 'https://app-pay2ads.onrender.com'
+        userId.innerHTML = 0
+        payAll.innerHTML = 0
+        var span = document.getElementById('paym-alert')
+        if (parseInt(span.innerHTML) === 0){ span.style.display='none'}
+        else { span.style.display='inline' }
+
+
+        function ShowContent(id){
+            if (id==='users') {
+                document.getElementById('contentUsers').style.display= 'flex'
+                document.getElementById('contentPay').style.display= 'none'
+                document.getElementById('contentPayed').style.display= 'none'
+            }else if(id === 'contentPayed'){
+                document.getElementById('contentUsers').style.display= 'none'
+                document.getElementById('contentPay').style.display= 'none'
+                document.getElementById('contentPayed').style.display= 'flex'
+            } else {
+                document.getElementById('contentUsers').style.display= 'none'
+                document.getElementById('contentPay').style.display= 'flex'
+                document.getElementById('contentPayed').style.display= 'none'
+            }
+        }
+        function setCards1(id,username,email,balance,password){
+            const div = document.createElement('div')
+            div.setAttribute('class', 'box-card-1')
+            div.style.width = '300px'
+            div.innerHTML = `
+                <div> <i class="bi-person" ></i> </div>
+                <div style="width:80%; align-items: flex-start;">
+                    <h1>Name: ${username}</h1>
+                    <p>Email: ${email}</p>
+                    <p>Balance: ${balance}</p>
+                    <p>*********</p>
+                </div>
+            `
+            document.getElementById('contentUsers').prepend(div)
+        }
+        function setCards2(id,back_name,username,iban,number,valor,created_at){
+            const div = document.createElement('div')
+            div.setAttribute('class', 'box-card-1')
+            div.innerHTML = `
+                <div> <i class="bi-person" ></i> </div>
+                <div style="width:80%;">
+                    <h1>Name: ${username}</h1>
+                    <p>Bank: ${back_name}</p>
+                    <p>Address: ${iban}</p>
+                    <p>Number: ${number}</p>
+                    <p>Balance: ${valor}</p>
+                    <p>Date: ${created_at}</p>
+                </div>
+                <button class="bi-trash" onclick="DeletePayment('${id}')"></button>
+            `
+            document.getElementById('contentPay').prepend(div)
+        }
+        function setCards3(id,back_name,username,iban,number,valor,status,created_at){
+            const div = document.createElement('div')
+            div.setAttribute('class', 'box-card-1')
+            div.innerHTML = `
+                <div> <i class="bi-person" ></i> </div>
+                <div style="width:80%;">
+                    <h1>Name: ${username}</h1>
+                    <p>Bank: ${back_name}</p>
+                    <p>Address: ${iban}</p>
+                    <p>Number: ${number}</p>
+                    <p>Balance: ${valor}</p>
+                    <p style='color:green;font-weight:bold;' >Status: ${status}</p>
+                    <p>Date: ${created_at}</p>
+                </div>
+            `
+            document.getElementById('contentPayed').prepend(div)
+        }
+        function DeletePayment(userId){
+            const API = axios()
+            const data = {"id": userId}
+            API.post(baseURL+'/app_pay2ads_admin_delete_payments', data, (res)=>{
+                window.location.reload()
+            })
+        }
+
+        
+
+        function axios(){
+            function get(url, callback){
+                fetch(url,
+                {
+                    method:'POST', headers: {"Content-Type": "application/json"}
+                }).then(res=>{
+                    if (!res.ok) {
+                        console.log('error')
+                    }
+                    return res.json()
+                }).then(data=>{ 
+                    const result = data.data
+                    callback(result)
+                })
+                .catch(err=>{console.log(err)})
+            }
+            function post(url, data, callback){
+                fetch(url,
+                {
+                    method:'POST', headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(data)
+                }).then(res=>{
+                    if (!res.ok) {
+                        console.log('error')
+                    }
+                    return res.json()
+                }).then(data=>{ 
+                    const result = data.data
+                    callback(result)
+                })
+                .catch(err=>{console.log(err)})
+            }
+            return {get,post}
+        }
+        const API = axios()
+        API.get(baseURL+'/app_pay2ads_adim_get_user_request_form',(data)=>{
+            if(data.length !==0){
+                data.map((ls)=>{
+                    setCards2(ls.id, ls.back_name,ls.username,ls.iban, ls.number, ls.valor, ls.created_at)
+                })
+                span.innerHTML = data.length
+                span.style.display = 'inline'
+                payAll.innerHTML = data.length
+            }
+        })
+        API.get(baseURL+'/app_pay2ads_adim_get_all_users',(data)=>{
+            if(data.length !==0){
+                data.map((ls)=>{
+                    setCards1(ls.id,ls.username,ls.email,ls.balance, ls.password)
+                })
+                userId.innerHTML = data.length
+            }
+        })
+        API.get(baseURL+'/app_pay2ads_adim_get_all_user_payed',(data)=>{
+            if(data.length !==0){
+                data.map((ls)=>{
+                    setCards3(ls.id, ls.back_name,ls.username,ls.iban, ls.number, ls.valor,ls.status,ls.created_at)
+                })
+                console.log(data)
+                payAll2.innerHTML = data.length
+            }
+        })
+    </script>
+</body>
+</html>
